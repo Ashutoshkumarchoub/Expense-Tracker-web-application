@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
-const ExpenseSchema = mongoose.Schema({
-  label: { type: String, require: true },
-  value: { type: Number, require: true },
-  date: { type: String, require: true },
+const ExpenseSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  value: { type: Number, required: true }, 
+  date: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Expense", ExpenseSchema);
+// This forces this instance of mongoose to point to your "expenses" collection in Atlas
+module.exports = mongoose.model("Expense", ExpenseSchema, "expenses");

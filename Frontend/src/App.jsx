@@ -3,6 +3,8 @@ import { FaTrash, FaEdit, FaWindowClose } from "react-icons/fa";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { publicRequest } from "./requestMethods";
 
+// First run cd backend, then nodemon index.js
+// then rum cd Backend and then run Backgroundservices
 function App() {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showReport, setShowReport] = useState(false);
