@@ -1,35 +1,72 @@
-const express = require("express");
-const cron = require("node-cron");
-const app = express();
+
+const path = require("path");
 const dotenv = require("dotenv");
+
+// Load environment variables first
+dotenv.config({
+  path: path.resolve(__dirname, ".env"),
+});
+
+const cron = require("node-cron");
 const mongoose = require("mongoose");
 const expenseEmail = require("./EmailService/Expense");
 
-dotenv.config();
+let isRunning = false;
+let cronTask;
 
-// 1. Connect to MongoDB Atlas
-mongoose
-  .connect(process.env.DB_CONNECTION)
-  .then(() => {
-    console.log("DB connection is successfull");
-    
-    // 2. ONLY START THE CRON JOB AFTER THE DB IS CONNECTED
-    run();
-  })
-  .catch((err) => {
-    console.log("DB Connection Failed:", err);
-  });
+const startBackgroundService = async () => {
+  try {
+    await mongoose.connect(process.env.DB_CONNECTION);
 
-const run = () => {
-  console.log("Cron job initialized and scheduled.");
-  
-  // FIX: Changed from every second ("* * * * * *") to once every minute ("* * * * *")
-  cron.schedule("* * * * *", () => {
-    console.log("⏰ Running scheduled email check...");
-    expenseEmail();
-  });
+    console.log("MongoDB connected successfully");
+    console.log("Background worker started.");
+
+    cronTask = cron.schedule("* * * * *", async () => {
+      // Prevent overlapping executions
+      if (isRunning) {
+        console.log("Previous email check is still running. Skipping.");
+        return;
+      }
+
+      isRunning = true;
+
+      try {
+        console.log("Running scheduled email check...");
+
+        await expenseEmail();
+
+        console.log("Email check completed successfully.");
+      } catch (error) {
+        console.error("Email service error:", error.message);
+      } finally {
+        isRunning = false;
+      }
+    });
+  } catch (error) {
+    console.error("Background service startup failed:", error.message);
+    process.exit(1);
+  }
 };
 
-app.listen(process.env.PORT, () => {
-  console.log(`Background services is running on port ${process.env.PORT}`);
-});
+// Gracefully stop the worker
+const shutdown = async () => {
+  console.log("Stopping background worker...");
+
+  if (cronTask) {
+    cronTask.stop();
+  }
+
+  try {
+    await mongoose.disconnect();
+    console.log("MongoDB disconnected.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Shutdown error:", error.message);
+    process.exit(1);
+  }
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+startBackgroundService();

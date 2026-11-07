@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -5,28 +6,43 @@ const dotenv = require("dotenv");
 const expenseRoute = require("./routes/expense");
 
 dotenv.config();
+
 const app = express();
+const PORT = process.env.PORT || 5000;
 
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",")
+    : true
+}));
 
-
-//MIDDLE WARE
-app.use(cors());
 app.use(express.json());
 
-//ROUTES
+// Health check
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Expense Tracker API is running"
+  });
+});
+
+// Routes
 app.use("/expenses", expenseRoute);
 
-//DB CONNECTION
+// Database connection and server startup
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.DB_CONNECTION);
 
-mongoose
-  .connect(process.env.DB_CONNECTION)
-  .then(() => {
-    console.log("DB connection is successful");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+    console.log("MongoDB connected successfully");
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on post ${process.env.PORT}`);
-});
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
