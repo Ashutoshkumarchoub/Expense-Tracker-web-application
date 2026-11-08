@@ -1,3 +1,11 @@
+# Live Demo
+
+Live Application: https://expense-tracker-web-application-nu.vercel.app/
+
+GitHub Repository: https://github.com/Ashutoshkumarchoub/Expense-Tracker-web-application
+
+Backend API: https://expense-tracker-backend-0iqv.onrender.com/
+
 # Expense Tracker – Full-Stack Expense Management Application
 
 A full-stack Expense Tracker application built to simplify personal expense management and financial monitoring. It allows users to manage expense records through an interactive web interface, visualize spending patterns, and receive automated email notifications when expenses exceed a configured spending threshold.
